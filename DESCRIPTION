@@ -1,0 +1,36 @@
+Package: gstIndia
+Title: India State-Wise Monthly GST Collection Data (2017-2026)
+Version: 0.1.0
+Authors@R: 
+    person("Pawan", 
+           email = "pawanjangra1198@gmail.com", 
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0000-0000-0000"))
+Description: Provides tidy, analysis-ready datasets of India's Goods and 
+    Services Tax (GST) collections from July 2017 through early 2026, sourced 
+    from official Government of India Ministry of Finance data. Includes 
+    state-wise monthly domestic GST broken down by component (CGST, SGST, IGST, 
+    CESS) across all Indian states and Union Territories, as well as All-India 
+    summary aggregates. Helper functions support filtering, year-on-year growth 
+    analysis, and state/component summaries.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+Depends:
+    R (>= 4.1.0)
+Imports:
+    data.table (>= 1.14.0),
+    utils
+LazyData: true
+Suggests:
+    ggplot2,
+    ggiraph,
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    scales
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+URL: https://github.com/pawan1198/gstIndia
+BugReports: https://github.com/pawan1198/gstIndia/issues
