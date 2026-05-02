@@ -161,7 +161,7 @@ citation("gstIndia")
 ```
 
 ```
-Kumar P (2025). gstIndia: India State-Wise Monthly GST Collection Data (2017-2026).
+Pawan (2025). gstIndia: India State-Wise Monthly GST Collection Data (2017-2026).
 R package version 0.1.0. https://github.com/pawan1198/gstIndia
 ```
 
