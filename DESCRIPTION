@@ -1,6 +1,6 @@
 Package: gstIndia
 Title: India State-Wise Monthly GST Collection Data (2017-2026)
-Version: 0.1.0
+Version: 1.0.0
 Authors@R: 
     person("Pawan", 
            email = "pawanjangra1198@gmail.com", 
