@@ -1,0 +1,117 @@
+name: Release
+
+# Triggered whenever you push a tag like v0.2.0
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write   # needed to create GitHub Releases
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── 2. Set up R ──────────────────────────────────────────────────────────
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: "release"
+
+      # ── 3. Install system dependencies ───────────────────────────────────────
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
+
+      # ── 4. Install R dependencies ─────────────────────────────────────────────
+      - name: Install R dependencies
+        run: |
+          install.packages(c("remotes", "pkgbuild", "data.table"), repos = "https://cloud.r-project.org")
+          remotes::install_deps(dependencies = TRUE)
+        shell: Rscript {0}
+
+      # ── 5. Extract version from tag ───────────────────────────────────────────
+      - name: Get version
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      # ── 6. Parse release notes from NEWS.md ───────────────────────────────────
+      - name: Extract release notes from NEWS.md
+        id: notes
+        run: |
+          python3 - <<'EOF'
+          import re, os, sys
+
+          version = os.environ["VERSION"]
+          text    = open("NEWS.md").read()
+
+          pattern = rf"(?m)^# mypkg {re.escape(version)}\s*\n(.*?)(?=^# mypkg |\Z)"
+          m = re.search(pattern, text, re.S)
+          if not m:
+              sys.exit(f"Could not find NEWS.md entry for version {version}")
+
+          notes = m.group(1).strip()
+
+          delimiter = "EOF_NOTES"
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"notes<<{delimiter}\n{notes}\n{delimiter}\n")
+
+          print("Release notes extracted successfully.")
+          EOF
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+
+      # ── 7. Build source tarball (.tar.gz) ─────────────────────────────────────
+      - name: Build source tarball
+        id: build_src
+        run: |
+          PKG=$(Rscript -e "cat(read.dcf('DESCRIPTION')[,'Package'])")
+          VER=$(Rscript -e "cat(read.dcf('DESCRIPTION')[,'Version'])")
+          R CMD build .
+          TARBALL="${PKG}_${VER}.tar.gz"
+          echo "TARBALL=${TARBALL}" >> "$GITHUB_OUTPUT"
+          echo "Built: ${TARBALL}"
+
+      # ── 8. Generate checksums file ────────────────────────────────────────────
+      - name: Generate checksums
+        id: checksums
+        run: |
+          PKG=$(Rscript -e "cat(read.dcf('DESCRIPTION')[,'Package'])")
+          VER=$(Rscript -e "cat(read.dcf('DESCRIPTION')[,'Version'])")
+          CHECKSUM_FILE="${PKG}_${VER}_checksums.txt"
+
+          echo "# SHA-256 checksums for mypkg ${VER}"   > "$CHECKSUM_FILE"
+          echo "# Generated: $(date -u '+%Y-%m-%d %H:%M UTC')" >> "$CHECKSUM_FILE"
+          echo ""                                              >> "$CHECKSUM_FILE"
+          sha256sum "${PKG}_${VER}.tar.gz"                    >> "$CHECKSUM_FILE"
+
+          echo "CHECKSUM_FILE=${CHECKSUM_FILE}" >> "$GITHUB_OUTPUT"
+
+      # ── 9. Create the GitHub Release with assets ──────────────────────────────
+      #
+      #  Assets attached to every release:
+      #    ✅  mypkg_X.Y.Z.tar.gz          R source package (installable via remotes)
+      #    ✅  mypkg_X.Y.Z_checksums.txt   SHA-256 hashes to verify downloads
+      #    ✅  Source code (zip)            Auto-added by GitHub
+      #    ✅  Source code (tar.gz)         Auto-added by GitHub
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "mypkg ${{ steps.version.outputs.VERSION }}"
+          body: ${{ steps.notes.outputs.notes }}
+          draft: false
+          prerelease: false
+          files: |
+            ${{ steps.build_src.outputs.TARBALL }}
+            ${{ steps.checksums.outputs.CHECKSUM_FILE }}
