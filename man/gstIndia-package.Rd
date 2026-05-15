@@ -4,27 +4,67 @@
 \name{gstIndia-package}
 \alias{gstIndia-package}
 \alias{gstIndia}
-\title{gstIndia: India State-Wise Monthly GST Collection Data}
+\title{gstIndia: Comprehensive India GST Data Repository (2017–2026)}
 \description{
-Provides tidy, analysis-ready datasets of India's Goods and Services Tax
-(GST) collections from July 2017 through early 2026. Data is sourced from
-official Government of India Ministry of Finance releases.
-\subsection{Main Datasets}{
-\itemize{
-\item \link{gst_statewise}: Monthly state-wise domestic GST by component
-(CGST, SGST, IGST, CESS) — ~4,000 rows across 36 states/UTs.
-\item \link{gst_allindia}: Monthly All-India aggregates with category breakdowns
-(domestic, IGST on imports, gross revenue, refunds, net revenue).
+A complete, analysis-ready repository of India's GST ecosystem covering
+July 2017 through early 2026. All monetary values are in \strong{Rs. Crore}
+(1 Crore = 10 million INR). Data is sourced from the Ministry of Finance,
+Government of India, and the GST Council.
+\subsection{Datasets}{\tabular{lll}{
+   Dataset \tab Rows \tab Description \cr
+   \link{gst_statewise} \tab 4,306 \tab Monthly state/UT domestic GST (CGST/SGST/IGST/CESS) \cr
+   \link{gst_refunds} \tab 2,911 \tab Monthly state/UT refund disbursements \cr
+   \link{gstr1_filing} \tab 3,876 \tab GSTR-1 return filing compliance by state/month \cr
+   \link{gstr3b_filing} \tab 3,914 \tab GSTR-3B return filing compliance by state/month \cr
+   \link{ewb_data} \tab 3,474 \tab E-Way Bill statistics (intrastate & interstate) \cr
+   \link{igst_settlement} \tab 3,914 \tab Monthly IGST settlement to states (regular + ad-hoc) \cr
+   \link{gross_net_collection} \tab 23 \tab Monthly gross vs net national collection (FY 2024-26) \cr
+   \link{gst_registration} \tab 39 \tab State-wise taxpayer registration by category \cr
+   \link{gst_taxpayer_profile} \tab 16 \tab Taxpayer constitution and gender analysis \cr
 }
+
 }
 
 \subsection{Key Functions}{
+
+\strong{Collection & Refunds}
 \itemize{
-\item \code{\link[=gst_filter]{gst_filter()}}: Subset data by year, state, or component
-\item \code{\link[=gst_yoy]{gst_yoy()}}: Year-on-year growth rates
-\item \code{\link[=gst_annual_summary]{gst_annual_summary()}}: Annual totals by state or component
-\item \code{\link[=gst_top_states]{gst_top_states()}}: Top N states by collection in a given period
-\item \code{\link[=gst_state_share]{gst_state_share()}}: State-level share of national collection
+\item \code{\link[=gst_filter]{gst_filter()}} — Subset statewise data by year, state, region, component
+\item \code{\link[=gst_yoy]{gst_yoy()}} — Year-on-year growth rates
+\item \code{\link[=gst_annual_summary]{gst_annual_summary()}} — Annual aggregates by state, region, or national
+\item \code{\link[=gst_top_states]{gst_top_states()}} — Top N states by collection or refund
+\item \code{\link[=gst_state_share]{gst_state_share()}} — State's \% share of national collection
+\item \code{\link[=gst_component_mix]{gst_component_mix()}} — Monthly CGST/SGST/IGST/CESS component breakdown
+\item \code{\link[=gst_net_collection]{gst_net_collection()}} — Net collection after refunds
+}
+
+\strong{Compliance}
+\itemize{
+\item \code{\link[=gst_filing_compliance]{gst_filing_compliance()}} — Return filing rates (GSTR-1 or GSTR-3B)
+\item \code{\link[=gst_compliance_trend]{gst_compliance_trend()}} — Compliance trend over time
+\item \code{\link[=gst_low_compliance_states]{gst_low_compliance_states()}} — States with below-average filing rates
+}
+
+\strong{E-Way Bills}
+\itemize{
+\item \code{\link[=ewb_summary]{ewb_summary()}} — E-Way Bill summary by state and direction
+\item \code{\link[=ewb_top_states]{ewb_top_states()}} — Top states by e-Way Bill volume or value
+}
+
+\strong{IGST Settlement}
+\itemize{
+\item \code{\link[=igst_settlement_summary]{igst_settlement_summary()}} — Annual/monthly IGST settlement to states
+}
+
+\strong{Registration & Profile}
+\itemize{
+\item \code{\link[=gst_registration_summary]{gst_registration_summary()}} — Taxpayer registration totals by state
+}
+
+\strong{Reference}
+\itemize{
+\item \code{\link[=gst_states]{gst_states()}} — State names, codes, and regions
+\item \code{\link[=gst_years]{gst_years()}} — Available financial years
 }
 }
 }

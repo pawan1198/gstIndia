@@ -8,19 +8,12 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(
-  collapse  = TRUE,
-  comment   = "#>",
-  fig.width = 7,
-  fig.height = 4
-)
+knitr::opts_chunk$set(collapse=TRUE, comment="#>", fig.width=7, fig.height=4.5)
 ```
 
-## Overview
-
-**gstIndia** ships two ready-to-use `data.table` datasets covering India's GST
-collections from July 2017 through early 2026, along with a suite of helper
-functions for common analytical tasks.
+**gstIndia** v2.0.0 provides nine tidy `data.table` datasets covering India's
+GST ecosystem from July 2017 through early 2026, along with a complete suite of
+analysis functions. All monetary values are in **Rs. Crore**.
 
 ```{r load}
 library(gstIndia)
@@ -29,109 +22,152 @@ library(data.table)
 
 ---
 
-## Datasets at a Glance
+## What's in the package?
 
-### `gst_statewise` — Monthly state/UT breakdown
-
-```{r statewise-preview}
-data(gst_statewise)
-gst_statewise
+```{r catalogue}
+gst_catalogue()
 ```
-
-Key columns: `financial_year`, `month`, `month_date`, `state_code`, `state`,
-`region`, `cgst`, `sgst`, `igst`, `cess`, `total` (all monetary values in
-**Rs. Crore**).
-
-### `gst_allindia` — All-India monthly summary
-
-```{r allindia-preview}
-data(gst_allindia)
-gst_allindia
-```
-
-Available categories: `domestic`, `igst_import`, `gross_revenue`, `refund`,
-`net_revenue`.
 
 ---
 
-## Helper Functions
+## Quick reference
 
-### `gst_years()` and `gst_states()`
-
-```{r reference}
-gst_years()
-gst_states()
+```{r ref}
+gst_years()      # available financial years
+gst_states()     # 36+ states with codes and regions
 ```
 
-### `gst_filter()` — Subset the data
+---
+
+## 1. State-wise Collection
+
+### Filter and explore
 
 ```{r filter}
-# FY 2023-24, Southern states, total only
-gst_filter(
-  financial_year = "2023-24",
-  region         = "South",
-  component      = "total"
-)
+# South India FY 2023-24, total column only
+gst_filter(region = "South", financial_year = "2023-24", component = "total")
 ```
 
-### `gst_annual_summary()` — Annual aggregates
+### Top states
 
-```{r annual}
-# Annual state-level totals for FY 2022-23 and 2023-24
-gst_annual_summary(
-  by             = "state",
-  financial_year = c("2022-23", "2023-24"),
-  component      = c("cgst", "sgst", "igst", "total")
-)[order(-total)][1:10]
-```
-
-### `gst_top_states()` — Ranking
-
-```{r top-states}
+```{r top}
 gst_top_states(n = 10, financial_year = "2023-24")
 ```
 
-### `gst_state_share()` — Share of national total
+### Annual summary
 
-```{r state-share}
-share <- gst_state_share(financial_year = "2023-24")
-share[order(-share_pct)][1:10]
+```{r annual}
+# National totals per FY
+gst_annual_summary(by = "national")[, .(financial_year, total)]
 ```
 
-### `gst_yoy()` — Year-on-year growth
+### State share
+
+```{r share}
+gst_state_share(financial_year = "2023-24")[1:8]
+```
+
+### Year-on-year growth
 
 ```{r yoy}
-yoy <- gst_yoy(state = "Maharashtra")
-yoy[order(-month_date)][1:12, .(month, current, prior, pct_growth)]
+gst_yoy(state = "Maharashtra")[order(-month_date)][1:6,
+  .(month, current, prior, pct_growth)]
 ```
 
-### `gst_component_mix()` — Component share over time
+### Component mix
 
-```{r comp-mix}
+```{r mix}
 gst_component_mix(state = "Gujarat", financial_year = "2023-24")
 ```
 
 ---
 
-## Example Analysis with ggplot2
+## 2. Refunds & Net Collection
 
-```{r plot-top5, eval=FALSE}
+```{r net}
+# Net after refunds — top 10 states FY 2023-24
+gst_net_collection(financial_year = "2023-24", by = "state")[order(-net)][1:10]
+```
+
+---
+
+## 3. Return Filing Compliance
+
+```{r compliance}
+# GSTR-3B average compliance by region FY 2023-24
+gst_compliance_trend("GSTR-3B", by = "region", financial_year = "2023-24")[
+  order(-avg_filing_pct)]
+```
+
+```{r low-compliance}
+# States below 90% GSTR-1 compliance in FY 2022-23
+gst_low_compliance_states("GSTR-1", threshold = 0.90, financial_year = "2022-23")
+```
+
+---
+
+## 4. E-Way Bills
+
+```{r ewb}
+# Top 5 states by intrastate EWB count FY 2023-24
+ewb_top_states(n = 5, financial_year = "2023-24", direction = "intrastate")
+```
+
+```{r ewb-value}
+# Top 5 by interstate outgoing assessable value
+ewb_top_states(n = 5, metric = "assessable_value",
+               direction = "interstate_out", financial_year = "2023-24")
+```
+
+---
+
+## 5. IGST Settlement to States
+
+```{r igst}
+igst_settlement_summary(financial_year = "2023-24", by = "state")[order(-total)][1:8]
+```
+
+---
+
+## 6. Taxpayer Registration
+
+```{r reg}
+# Top 10 states by normal taxpayer registrations
+gst_registration_summary()[order(-normal)][1:10]
+```
+
+```{r profile}
+# Taxpayer constitution profile
+gst_taxpayer_profile[order(-total_taxpayers)]
+```
+
+---
+
+## 7. Gross vs Net National Collection (FY 2024-26)
+
+```{r gross-net}
+gross_net_collection[, .(month, gross_domestic_cur, refund_cur)]
+```
+
+---
+
+## Example: ggplot2 Trend Chart
+
+```{r plot, eval=FALSE}
 library(ggplot2)
 
-# Monthly trend — top 5 states FY 2023-24
 top5 <- gst_top_states(n = 5, financial_year = "2023-24")$state
-dt   <- gst_filter(state = top5, financial_year = c("2022-23","2023-24"),
+dt   <- gst_filter(state = top5,
+                   financial_year = c("2022-23","2023-24","2024-25"),
                    component = "total")
 
-ggplot(dt, aes(x = month_date, y = total / 1e3, colour = state)) +
+ggplot(dt, aes(month_date, total / 1e3, colour = state)) +
   geom_line(linewidth = 0.8) +
-  geom_point(size = 1.5) +
-  scale_y_continuous(labels = scales::comma_format(suffix = " K Cr")) +
-  labs(
-    title    = "Monthly GST Collection — Top 5 States",
-    subtitle = "FY 2022-23 to 2023-24  |  Rs. '000 Crore",
-    x = NULL, y = NULL, colour = "State"
-  ) +
+  scale_y_continuous(labels = scales::comma_format(suffix = "K Cr")) +
+  labs(title    = "Monthly GST Collection — Top 5 States",
+       subtitle = "FY 2022-23 to 2024-25  |  Rs. '000 Crore",
+       x = NULL, y = NULL, colour = NULL,
+       caption  = "Source: Ministry of Finance, GoI") +
   theme_minimal(base_size = 12) +
   theme(legend.position = "bottom")
 ```
@@ -140,9 +176,6 @@ ggplot(dt, aes(x = month_date, y = total / 1e3, colour = state)) +
 
 ## Data Source
 
-All data is sourced from the **Ministry of Finance, Government of India** — GST
-Revenue Collection releases published on <https://www.gst.gov.in>.
-
-Values are in **Rs. Crore** (1 Crore = 10 million Indian Rupees).
-FY 2017-18 covers only July 2017 – March 2018 (GST was rolled out on
-1 July 2017). FY 2025-26 data is provisional (up to February 2026).
+All data sourced from the **Ministry of Finance, Government of India** and the
+**GST Council**. Data covers July 2017 (GST rollout) through February 2026.
+FY 2025-26 figures are provisional.

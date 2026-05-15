@@ -3,59 +3,36 @@
 \docType{data}
 \name{gst_statewise}
 \alias{gst_statewise}
-\title{State-wise Monthly GST Collection in India (2017-2026)}
+\title{State-wise Monthly GST Collection (2017–2026)}
 \format{
-A \code{data.table} with columns:
+A \code{data.table} with 4,306 rows and 11 columns:
 \describe{
-\item{financial_year}{\code{character}. Financial year label, e.g. \code{"2023-24"}.}
-\item{month}{\code{character}. Calendar month in \code{"YYYY-MM"} format.}
-\item{month_date}{\code{Date}. First day of the month, for time-series plotting.}
+\item{financial_year}{\code{character}. Financial year, e.g. \code{"2023-24"}.}
+\item{month}{\code{character}. Month in \code{"YYYY-MM"} format.}
+\item{month_date}{\code{Date}. First day of the month.}
 \item{state_code}{\code{character}. Two-digit GST state code (zero-padded).}
-\item{state}{\code{character}. Full name of the state or Union Territory.}
-\item{region}{\code{character}. Broad geographic region: \code{"North"}, \code{"South"},
+\item{state}{\code{character}. Full state/UT name.}
+\item{region}{\code{character}. Geographic region: \code{"North"}, \code{"South"},
 \code{"East"}, \code{"West"}, \code{"Central"}, \code{"Northeast"}, or \code{"Other"}.}
-\item{cgst}{\code{numeric}. Central GST collection (Rs. Crore).}
-\item{sgst}{\code{numeric}. State GST collection (Rs. Crore).}
-\item{igst}{\code{numeric}. Integrated GST collection (Rs. Crore).}
+\item{cgst}{\code{numeric}. Central GST (Rs. Crore).}
+\item{sgst}{\code{numeric}. State GST (Rs. Crore).}
+\item{igst}{\code{numeric}. Integrated GST (Rs. Crore).}
 \item{cess}{\code{numeric}. GST Compensation Cess (Rs. Crore).}
-\item{total}{\code{numeric}. Total domestic GST (CGST + SGST + IGST + CESS),
-in Rs. Crore.}
+\item{total}{\code{numeric}. Sum of all components (Rs. Crore).}
 }
 }
 \source{
-Ministry of Finance, Government of India. GST Revenue Collection Data.
-\url{https://www.gst.gov.in}
+Ministry of Finance, Government of India. \url{https://www.gst.gov.in}
 }
 \usage{
 gst_statewise
 }
 \description{
-A \code{data.table} containing monthly domestic GST collection figures broken down
-by state/UT and GST component, covering Financial Years 2017-18 through
-2025-26. All values are in \strong{Rs. Crore} (1 Crore = 10 million).
-}
-\details{
-Data is sourced from the Ministry of Finance, Government of India, and
-covers domestic GST only (excludes IGST on imports). The dataset spans
-from July 2017 (GST rollout) through February 2026. Financial Year 2017-18
-has only 9 months of data (Jul 2017 – Mar 2018). State codes follow the
-GST Council's official mapping. Some Union Territories have been merged
-(e.g., Daman & Diu with Dadra & Nagar Haveli from FY 2020-21 onward).
+Monthly domestic GST collection broken down by state/UT and component,
+covering FY 2017-18 through FY 2025-26. Values in \strong{Rs. Crore}.
 }
 \examples{
-library(data.table)
 data(gst_statewise)
-
-# Preview
-gst_statewise
-
-# Total collection by financial year
-gst_statewise[, .(total_cr = sum(total, na.rm = TRUE)),
-              by = financial_year][order(financial_year)]
-
-# Maharashtra monthly trend
-maha <- gst_statewise[state == "Maharashtra",
-                      .(month_date, total)]
-maha[order(month_date)]
+gst_statewise[state == "Maharashtra", .(month, total)][order(month)]
 }
 \keyword{datasets}

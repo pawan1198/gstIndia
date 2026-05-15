@@ -10,8 +10,8 @@ gst_states()
 A \code{data.table} with \code{state_code}, \code{state}, and \code{region}.
 }
 \description{
-Returns a reference \code{data.table} of all state/UT names, codes, and
-regions present in \link{gst_statewise}.
+Reference table of all state/UT names, codes, and regions from
+\link{gst_statewise}.
 }
 \examples{
 gst_states()

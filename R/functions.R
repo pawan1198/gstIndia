@@ -1,355 +1,299 @@
-#' Filter GST State-wise Data
+# ── Compliance Functions ───────────────────────────────────────────────────────
+
+#' GST Return Filing Compliance
 #'
-#' @description
-#' Convenience wrapper to subset [gst_statewise] by financial year, state,
-#' region, and/or GST component. Returns a `data.table`.
+#' Retrieve GSTR-1 or GSTR-3B filing statistics filtered by year, state, or
+#' region.
 #'
-#' @param financial_year `character` vector of financial years to keep, e.g.
-#'   `c("2022-23", "2023-24")`. `NULL` (default) returns all years.
-#' @param state `character` vector of state/UT names to keep. `NULL` returns
-#'   all states. Partial matching is **not** performed; use exact names as in
-#'   [gst_statewise].
-#' @param region `character` vector of region labels (`"North"`, `"South"`,
-#'   `"East"`, `"West"`, `"Central"`, `"Northeast"`, `"Other"`).
-#'   `NULL` returns all regions.
-#' @param component `character` vector of components to return. One or more of
-#'   `"cgst"`, `"sgst"`, `"igst"`, `"cess"`, `"total"`. Default `NULL`
-#'   returns all components.
-#' @param from_month `character` start month `"YYYY-MM"` (inclusive). Default
-#'   `NULL` (no lower bound).
-#' @param to_month `character` end month `"YYYY-MM"` (inclusive). Default
-#'   `NULL` (no upper bound).
+#' @param return_type `character(1)`. `"GSTR-1"` (default) or `"GSTR-3B"`.
+#' @param financial_year `character` vector. `NULL` = all.
+#' @param state `character` vector. `NULL` = all.
+#' @param region `character` vector. `NULL` = all.
+#' @param from_month `character`. Start month `"YYYY-MM"`.
+#' @param to_month `character`. End month `"YYYY-MM"`.
 #'
-#' @return A `data.table` with columns `financial_year`, `month`, `month_date`,
-#'   `state_code`, `state`, `region`, and the selected components.
-#'
+#' @return A `data.table` with filing compliance columns.
 #' @export
-#'
 #' @examples
-#' # All states, last two financial years
-#' gst_filter(financial_year = c("2023-24", "2024-25"))
-#'
-#' # Punjab and Haryana, CGST + TOTAL only
-#' gst_filter(state = c("Punjab", "Haryana"), component = c("cgst", "total"))
-#'
-#' # Southern region, FY 2022-23
-#' gst_filter(region = "South", financial_year = "2022-23")
-#'
-#' # Date range across years
-#' gst_filter(from_month = "2023-04", to_month = "2024-03")
-gst_filter <- function(financial_year = NULL,
-                       state          = NULL,
-                       region         = NULL,
-                       component      = NULL,
-                       from_month     = NULL,
-                       to_month       = NULL) {
-  gst_statewise <- NULL  # avoid R CMD check NOTE
-  e <- asNamespace("gstIndia")
-  dt <- copy(get("gst_statewise", envir = e))
+#' gst_filing_compliance("GSTR-3B", financial_year = "2023-24", region = "South")
+gst_filing_compliance <- function(return_type = c("GSTR-1","GSTR-3B"),
+                                  financial_year = NULL, state = NULL,
+                                  region = NULL, from_month = NULL,
+                                  to_month = NULL) {
+  return_type <- match.arg(return_type)
+  ds_name <- if (return_type == "GSTR-1") "gstr1_filing" else "gstr3b_filing"
+  dt <- copy(.get_ds(ds_name))
 
-  fy_arg     <- financial_year
-  state_arg  <- state
-  region_arg <- region
+  fy_ <- financial_year; st_ <- state; rg_ <- region
+  fm_ <- from_month;     tm_ <- to_month
 
-  if (!is.null(fy_arg))     dt <- dt[get("financial_year") %in% fy_arg]
-  if (!is.null(state_arg))  dt <- dt[get("state") %in% state_arg]
-  if (!is.null(region_arg)) dt <- dt[get("region") %in% region_arg]
-
-  if (!is.null(from_month))
-    dt <- dt[get("month") >= from_month]
-
-  if (!is.null(to_month))
-    dt <- dt[get("month") <= to_month]
-
-  id_cols  <- c("financial_year", "month", "month_date",
-                "state_code", "state", "region")
-  all_comp <- c("cgst", "sgst", "igst", "cess", "total")
-
-  if (!is.null(component)) {
-    bad <- setdiff(component, all_comp)
-    if (length(bad))
-      stop("Unknown component(s): ", paste(bad, collapse = ", "),
-           ". Choose from: ", paste(all_comp, collapse = ", "), ".")
-    dt <- dt[, .SD, .SDcols = c(id_cols, component)]
-  }
-
+  if (!is.null(fy_)) dt <- dt[get("financial_year") %in% fy_]
+  if (!is.null(st_)) dt <- dt[get("state")          %in% st_]
+  if (!is.null(rg_)) dt <- dt[get("region")         %in% rg_]
+  if (!is.null(fm_)) dt <- dt[get("month")          >= fm_]
+  if (!is.null(tm_)) dt <- dt[get("month")          <= tm_]
   dt
 }
 
 
-#' Year-on-Year Growth in GST Collection
+#' Filing Compliance Trend Over Time
 #'
-#' @description
-#' Computes month-over-same-month-of-prior-year growth rates for each state,
-#' returning both the absolute change and percentage growth.
+#' Computes average filing percentage per month, optionally grouped by region
+#' or state, for GSTR-1 or GSTR-3B.
 #'
-#' @param component `character(1)`. Which component to use for growth
-#'   calculation. One of `"cgst"`, `"sgst"`, `"igst"`, `"cess"`, `"total"`
-#'   (default).
-#' @param state `character` vector to filter states. `NULL` (default) = all.
-#' @param financial_year `character` vector to filter years. `NULL` = all.
+#' @param return_type `character(1)`. `"GSTR-1"` or `"GSTR-3B"`.
+#' @param by `character(1)`. `"national"` (default), `"region"`, or `"state"`.
+#' @param financial_year `character` vector. `NULL` = all.
+#' @param state `character` vector. `NULL` = all.
 #'
-#' @return A `data.table` with columns `state`, `month`, `month_date`,
-#'   `current`, `prior`, `change`, `pct_growth`.
-#'
+#' @return A `data.table` with `month_date` and `avg_filing_pct`.
 #' @export
-#'
 #' @examples
-#' # YoY growth for Maharashtra
-#' gst_yoy(state = "Maharashtra")
-#'
-#' # National CGST growth, last two years
-#' gst_yoy(component = "cgst", financial_year = c("2023-24", "2024-25"))
-gst_yoy <- function(component     = "total",
-                    state         = NULL,
-                    financial_year = NULL) {
-  comp_choices <- c("cgst", "sgst", "igst", "cess", "total")
-  component <- match.arg(component, comp_choices)
+#' gst_compliance_trend("GSTR-3B", by = "region", financial_year = "2023-24")
+gst_compliance_trend <- function(return_type = c("GSTR-1","GSTR-3B"),
+                                 by = c("national","region","state"),
+                                 financial_year = NULL, state = NULL) {
+  return_type <- match.arg(return_type)
+  by          <- match.arg(by)
+  dt <- gst_filing_compliance(return_type, financial_year=financial_year, state=state)
 
-  dt <- gst_filter(state = state, financial_year = financial_year,
-                   component = component)
-  setnames(dt, component, "value")
-
-  # Lag by 12 months per state
-  setkey(dt, state, month_date)
-  dt[, prior := shift(value, 12L), by = state]
-  dt[, `:=`(change     = value - prior,
-            pct_growth = (value - prior) / abs(prior) * 100)]
-
-  setnames(dt, "value", "current")
-  dt[!is.na(prior)]
-}
-
-
-#' Annual GST Summary
-#'
-#' @description
-#' Aggregates monthly state-wise data to annual totals, optionally grouped by
-#' state, region, or component.
-#'
-#' @param by `character(1)`. Grouping level: `"state"` (default), `"region"`,
-#'   or `"national"`.
-#' @param component `character` vector of components to sum. Defaults to all:
-#'   `c("cgst","sgst","igst","cess","total")`.
-#' @param financial_year `character` vector to filter. `NULL` = all years.
-#'
-#' @return A `data.table` with `financial_year`, grouping column(s), and
-#'   summed component columns.
-#'
-#' @export
-#'
-#' @examples
-#' # Annual state totals
-#' gst_annual_summary()
-#'
-#' # Annual by region
-#' gst_annual_summary(by = "region")
-#'
-#' # National CGST and SGST only
-#' gst_annual_summary(by = "national", component = c("cgst", "sgst"))
-gst_annual_summary <- function(by            = c("state", "region", "national"),
-                               component     = c("cgst","sgst","igst","cess","total"),
-                               financial_year = NULL) {
-  by        <- match.arg(by)
-  all_comp  <- c("cgst", "sgst", "igst", "cess", "total")
-  component <- match.arg(component, all_comp, several.ok = TRUE)
-
-  dt <- gst_filter(financial_year = financial_year, component = component)
-
-  # Exclude non-state rows for state-level summaries
-  if (by %in% c("state", "region"))
-    dt <- dt[!state %in% c("Other Territory", "CBIC")]
-
-  group_by <- switch(by,
-    state    = c("financial_year", "state", "region"),
-    region   = c("financial_year", "region"),
-    national = "financial_year"
+  grp <- switch(by,
+    national = c("month","month_date"),
+    region   = c("month","month_date","region"),
+    state    = c("month","month_date","state","region")
   )
-
-  dt[, lapply(.SD, sum, na.rm = TRUE),
-     by      = group_by,
-     .SDcols = component
-  ][order(financial_year)]
-}
-
-
-#' Top States by GST Collection
-#'
-#' @description
-#' Returns the top `n` states ranked by total GST collection for a given
-#' financial year or month range.
-#'
-#' @param n `integer(1)`. Number of top states to return. Default `10L`.
-#' @param component `character(1)`. Component to rank by. Default `"total"`.
-#' @param financial_year `character` vector. `NULL` = all years pooled.
-#' @param from_month `character`. Start month `"YYYY-MM"`.
-#' @param to_month `character`. End month `"YYYY-MM"`.
-#' @param exclude_other `logical(1)`. Exclude `"Other Territory"` and
-#'   `"CBIC"` rows (default `TRUE`).
-#'
-#' @return A `data.table` with columns `rank`, `state`, and the chosen
-#'   component total.
-#'
-#' @export
-#'
-#' @examples
-#' # Top 5 states in FY 2023-24
-#' gst_top_states(n = 5, financial_year = "2023-24")
-#'
-#' # Top 10 by CGST in Q1 FY 2024-25
-#' gst_top_states(component = "cgst",
-#'                from_month = "2024-04", to_month = "2024-06")
-gst_top_states <- function(n              = 10L,
-                           component      = "total",
-                           financial_year = NULL,
-                           from_month     = NULL,
-                           to_month       = NULL,
-                           exclude_other  = TRUE) {
-  component <- match.arg(component, c("cgst","sgst","igst","cess","total"))
-
-  dt <- gst_filter(financial_year = financial_year,
-                   from_month     = from_month,
-                   to_month       = to_month,
-                   component      = component)
-
-  if (exclude_other)
-    dt <- dt[!state %in% c("Other Territory", "CBIC")]
-
-  out <- dt[, .(collection = sum(get(component), na.rm = TRUE)), by = state]
-  setorder(out, -collection)
-  out[, rank := seq_len(.N)]
-  setcolorder(out, c("rank", "state", "collection"))
-  setnames(out, "collection", component)
-  head(out, n)
-}
-
-
-#' State Share of National GST Collection
-#'
-#' @description
-#' Calculates each state's percentage share of the national total for a given
-#' financial year or date range.
-#'
-#' @param component `character(1)`. Component to use. Default `"total"`.
-#' @param financial_year `character` vector. `NULL` = all years pooled.
-#' @param from_month `character`. Start month `"YYYY-MM"`.
-#' @param to_month `character`. End month `"YYYY-MM"`.
-#' @param exclude_other `logical(1)`. Exclude `"Other Territory"` and
-#'   `"CBIC"`. Default `TRUE`.
-#'
-#' @return A `data.table` with columns `state`, `region`, `collection`,
-#'   and `share_pct`.
-#'
-#' @export
-#'
-#' @examples
-#' # State shares in FY 2023-24
-#' gst_state_share(financial_year = "2023-24")
-gst_state_share <- function(component      = "total",
-                            financial_year = NULL,
-                            from_month     = NULL,
-                            to_month       = NULL,
-                            exclude_other  = TRUE) {
-  component <- match.arg(component, c("cgst","sgst","igst","cess","total"))
-
-  dt <- gst_filter(financial_year = financial_year,
-                   from_month     = from_month,
-                   to_month       = to_month,
-                   component      = component)
-
-  if (exclude_other)
-    dt <- dt[!state %in% c("Other Territory", "CBIC")]
-
-  out <- dt[, .(collection = sum(get(component), na.rm = TRUE),
-                region     = region[1L]),
-            by = state]
-
-  out[, share_pct := collection / sum(collection) * 100]
-  setorder(out, -collection)
-  setnames(out, "collection", component)
+  out <- dt[, .(avg_filing_pct = mean(filing_pct, na.rm=TRUE),
+                total_eligible = sum(eligible,   na.rm=TRUE),
+                total_filed    = sum(total_filed, na.rm=TRUE)), by=grp]
+  setorder(out, month_date)
   out
 }
 
 
-#' Monthly Component Mix
+#' States with Below-Average Filing Compliance
 #'
-#' @description
-#' For a given state (or national aggregate), returns the monthly share
-#' of each GST component in the total collection.
+#' Identify states whose average filing percentage falls below a threshold,
+#' for a given return type and period.
 #'
-#' @param state `character(1)`. State name. If `NULL`, aggregates all states
-#'   (national level).
-#' @param financial_year `character` vector. `NULL` = all years.
+#' @param return_type `character(1)`. `"GSTR-1"` or `"GSTR-3B"`.
+#' @param threshold `numeric`. Filing percentage threshold (default `0.9` = 90%).
+#' @param financial_year `character` vector. `NULL` = all.
 #'
-#' @return A `data.table` with `month_date`, `cgst_pct`, `sgst_pct`,
-#'   `igst_pct`, `cess_pct`.
-#'
+#' @return A `data.table` with `state`, `region`, `avg_filing_pct`, `months_below`.
 #' @export
-#'
 #' @examples
-#' # Component mix for Gujarat over all years
-#' gst_component_mix(state = "Gujarat")
-#'
-#' # National component mix for FY 2023-24
-#' gst_component_mix(financial_year = "2023-24")
-gst_component_mix <- function(state = NULL, financial_year = NULL) {
-  # Keep only rows that represent individual months (not annual totals),
-  # identified by having a valid month_date
-  dt <- gst_filter(state = state, financial_year = financial_year)
-  dt <- dt[!is.na(get("month_date"))]
+#' gst_low_compliance_states("GSTR-3B", threshold = 0.85,
+#'                           financial_year = "2023-24")
+gst_low_compliance_states <- function(return_type = c("GSTR-1","GSTR-3B"),
+                                      threshold = 0.90,
+                                      financial_year = NULL) {
+  return_type <- match.arg(return_type)
+  dt <- gst_filing_compliance(return_type, financial_year=financial_year)
 
-  # Aggregate across states (if no state filter) by month
-  agg <- dt[, lapply(.SD, sum, na.rm = TRUE),
-            by      = c("month", "month_date"),
-            .SDcols = c("cgst", "sgst", "igst", "cess")]
-
-  # Compute total from components so it is internally consistent
-  agg[, total := cgst + sgst + igst + cess]
-
-  agg[total > 0, `:=`(
-    cgst_pct = cgst / total * 100,
-    sgst_pct = sgst / total * 100,
-    igst_pct = igst / total * 100,
-    cess_pct = cess / total * 100
-  )]
-  setorder(agg, month_date)
-  agg[, .(month_date, cgst_pct, sgst_pct, igst_pct, cess_pct)]
+  out <- dt[, .(avg_filing_pct = mean(filing_pct, na.rm=TRUE),
+                months_below   = sum(filing_pct < threshold, na.rm=TRUE),
+                region         = region[1L]), by=state]
+  out <- out[avg_filing_pct < threshold]
+  setorder(out, avg_filing_pct)
+  out
 }
 
 
+# ── E-Way Bill Functions ───────────────────────────────────────────────────────
+
+#' E-Way Bill Summary
+#'
+#' Retrieve and aggregate e-Way Bill data by state and direction.
+#'
+#' @param financial_year `character` vector. `NULL` = all.
+#' @param state `character` vector. `NULL` = all.
+#' @param region `character` vector. `NULL` = all.
+#' @param direction `character`. `"all"` (default), `"intrastate"`,
+#'   `"interstate_out"`, or `"interstate_in"`.
+#'
+#' @return A `data.table` with EWB counts and assessable values.
+#' @export
+#' @examples
+#' ewb_summary(financial_year = "2023-24", direction = "intrastate")[order(-intrastate_ewb_count)][1:5]
+ewb_summary <- function(financial_year = NULL, state = NULL,
+                        region = NULL,
+                        direction = c("all","intrastate","interstate_out","interstate_in")) {
+  direction <- match.arg(direction)
+  dt <- copy(.get_ds("ewb_data"))
+  fy_ <- financial_year; st_ <- state; rg_ <- region
+  if (!is.null(fy_)) dt <- dt[get("financial_year") %in% fy_]
+  if (!is.null(st_)) dt <- dt[get("state")          %in% st_]
+  if (!is.null(rg_)) dt <- dt[get("region")         %in% rg_]
+
+  ewb_cols <- if (direction == "all") {
+    c("intrastate_suppliers","intrastate_ewb_count","intrastate_assessable_value",
+      "interstate_out_suppliers","interstate_out_ewb_count","interstate_out_assessable_value",
+      "interstate_in_suppliers","interstate_in_ewb_count","interstate_in_assessable_value")
+  } else {
+    grep(paste0("^",direction), names(dt), value=TRUE)
+  }
+  dt[, .SD, .SDcols = c(.ID_COLS, ewb_cols)]
+}
+
+
+#' Top States by E-Way Bill Volume or Value
+#'
+#' @param n `integer`. Number of states. Default `10L`.
+#' @param metric `character(1)`. `"ewb_count"` (default) or `"assessable_value"`.
+#' @param direction `character(1)`. `"intrastate"`, `"interstate_out"`,
+#'   `"interstate_in"`, or `"all"` (sum of all).
+#' @param financial_year `character` vector. `NULL` = all.
+#'
+#' @return A ranked `data.table`.
+#' @export
+#' @examples
+#' ewb_top_states(n = 5, financial_year = "2023-24")
+#' ewb_top_states(metric = "assessable_value", direction = "interstate_out",
+#'                financial_year = "2023-24")
+ewb_top_states <- function(n = 10L,
+                           metric    = c("ewb_count","assessable_value"),
+                           direction = c("intrastate","interstate_out","interstate_in","all"),
+                           financial_year = NULL) {
+  metric    <- match.arg(metric)
+  direction <- match.arg(direction)
+  dt <- copy(.get_ds("ewb_data"))
+  if (!is.null(financial_year))
+    dt <- dt[get("financial_year") %in% financial_year]
+
+  if (direction == "all") {
+    dt[, value := rowSums(.SD, na.rm=TRUE),
+       .SDcols = grep(metric, names(dt), value=TRUE)]
+  } else {
+    col_name <- paste0(direction, "_", metric)
+    dt[, value := get(col_name)]
+  }
+  out <- dt[, .(metric_total=sum(value, na.rm=TRUE), region=region[1L]), by=state]
+  setorder(out, -metric_total)
+  out[, rank := seq_len(.N)]
+  setnames(out, "metric_total", paste0(direction,"_",metric))
+  setcolorder(out, c("rank","state","region"))
+  utils::head(out, n)
+}
+
+
+# ── IGST Settlement Functions ─────────────────────────────────────────────────
+
+#' IGST Settlement Summary
+#'
+#' Retrieve and aggregate IGST settlement data to states.
+#'
+#' @param financial_year `character` vector. `NULL` = all.
+#' @param state `character` vector. `NULL` = all.
+#' @param by `character(1)`. `"state"` (default), `"region"`, or `"national"`.
+#'
+#' @return A `data.table` with regular, adhoc, and total IGST settlement.
+#' @export
+#' @examples
+#' igst_settlement_summary(financial_year = "2023-24", by = "state")[order(-total)][1:10]
+igst_settlement_summary <- function(financial_year = NULL, state = NULL,
+                                    by = c("state","region","national")) {
+  by <- match.arg(by)
+  dt <- copy(.get_ds("igst_settlement"))
+  if (!is.null(financial_year))
+    dt <- dt[get("financial_year") %in% financial_year]
+  if (!is.null(state))
+    dt <- dt[get("state") %in% state]
+
+  grp <- switch(by,
+    state    = c("financial_year","state","region"),
+    region   = c("financial_year","region"),
+    national = "financial_year"
+  )
+  out <- dt[, lapply(.SD, sum, na.rm=TRUE), by=grp, .SDcols=c("regular","adhoc","total")]
+  setorder(out, financial_year)
+  out
+}
+
+
+# ── Registration Functions ─────────────────────────────────────────────────────
+
+#' GST Registration Summary
+#'
+#' State-wise taxpayer registration counts, optionally filtered by region.
+#'
+#' @param region `character` vector. `NULL` = all.
+#' @param type `character` vector. Registration types to include:
+#'   `"normal"`, `"composition"`, `"isd"`, `"casual"`, `"tcs"`, `"tds"`.
+#'   Default = all.
+#'
+#' @return A `data.table`.
+#' @export
+#' @examples
+#' gst_registration_summary(region = "South")
+#' gst_registration_summary()[order(-normal)][1:10]
+gst_registration_summary <- function(region = NULL,
+                                     type = c("normal","composition","isd","casual","tcs","tds")) {
+  type <- match.arg(type, c("normal","composition","isd","casual","tcs","tds"), several.ok=TRUE)
+  dt <- copy(.get_ds("gst_registration"))
+  if (!is.null(region)) dt <- dt[get("region") %in% region]
+  dt[, .SD, .SDcols = c("state_code","state","region", type)]
+}
+
+
+# ── Reference Functions ────────────────────────────────────────────────────────
+
 #' Available States and Their Codes
 #'
-#' @description
-#' Returns a reference `data.table` of all state/UT names, codes, and
-#' regions present in [gst_statewise].
+#' Reference table of all state/UT names, codes, and regions from
+#' [gst_statewise].
 #'
 #' @return A `data.table` with `state_code`, `state`, and `region`.
-#'
 #' @export
-#'
 #' @examples
 #' gst_states()
 gst_states <- function() {
-  e <- asNamespace("gstIndia")
-  dt <- get("gst_statewise", envir = e)
+  dt <- .get_ds("gst_statewise")
   unique(dt[, .(state_code, state, region)])[order(state_code)]
 }
 
 
 #' Available Financial Years
 #'
-#' @description
-#' Returns a character vector of all financial years present in
-#' [gst_statewise].
-#'
 #' @return A sorted `character` vector of financial year labels.
-#'
 #' @export
-#'
 #' @examples
 #' gst_years()
 gst_years <- function() {
-  e <- asNamespace("gstIndia")
-  dt <- get("gst_statewise", envir = e)
-  sort(unique(dt[["financial_year"]]))
+  sort(unique(.get_ds("gst_statewise")[["financial_year"]]))
+}
+
+
+#' GST Data Catalogue
+#'
+#' Print a summary of all datasets available in the package.
+#'
+#' @return Invisibly returns a `data.table` of dataset metadata.
+#' @export
+#' @examples
+#' gst_catalogue()
+gst_catalogue <- function() {
+  cat <- data.table::data.table(
+    dataset = c("gst_statewise","gst_refunds","gstr1_filing","gstr3b_filing",
+                "ewb_data","igst_settlement","gross_net_collection",
+                "gst_registration","gst_taxpayer_profile"),
+    rows    = c(4306L, 2911L, 3876L, 3914L, 3474L, 3914L, 23L, 39L, 16L),
+    coverage = c("FY 2017-18 to 2025-26","FY 2020-21 to 2025-26",
+                 "FY 2017-18 to 2025-26","FY 2017-18 to 2025-26",
+                 "FY 2018-19 to 2025-26","FY 2017-18 to 2025-26",
+                 "Apr 2024 to Feb 2026","Snapshot Mar 2025",
+                 "Snapshot Mar 2025"),
+    description = c(
+      "State-wise monthly CGST/SGST/IGST/CESS collection",
+      "State-wise monthly GST refund disbursements",
+      "GSTR-1 filing compliance by state and month",
+      "GSTR-3B filing compliance by state and month",
+      "E-Way Bill statistics (intrastate & interstate)",
+      "Monthly IGST settlement to states (regular + ad-hoc)",
+      "Gross vs net national GST collection with YoY comparison",
+      "Taxpayer registration by state and type",
+      "Taxpayer constitution and female representation"
+    )
+  )
+  print(cat, class=FALSE)
+  invisible(cat)
 }

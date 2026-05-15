@@ -10,8 +10,7 @@ gst_years()
 A sorted \code{character} vector of financial year labels.
 }
 \description{
-Returns a character vector of all financial years present in
-\link{gst_statewise}.
+Available Financial Years
 }
 \examples{
 gst_years()
