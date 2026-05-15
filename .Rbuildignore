@@ -4,3 +4,5 @@
 ^LICENSE\.md$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^docs$
+^gstIndia_v2_source\.zip$
