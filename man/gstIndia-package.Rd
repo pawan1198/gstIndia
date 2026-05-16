@@ -79,4 +79,9 @@ Useful links:
 \author{
 \strong{Maintainer}: Pawan Kumar \email{pawan1198@example.com} (\href{https://orcid.org/0000-0000-0000-0000}{ORCID})
 
+Authors:
+\itemize{
+  \item Pawan Kumar \email{pawan1198@example.com} (\href{https://orcid.org/0000-0000-0000-0000}{ORCID})
+}
+
 }

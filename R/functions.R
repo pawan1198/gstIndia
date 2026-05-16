@@ -297,3 +297,4 @@ gst_catalogue <- function() {
   print(cat, class=FALSE)
   invisible(cat)
 }
+

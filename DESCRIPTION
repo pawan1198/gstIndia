@@ -1,34 +1,37 @@
 Package: gstIndia
-Title: India State-Wise Monthly GST Collection Data (2017-2026)
-Version: 1.0.0
-Authors@R: 
-    person("Pawan", 
-           email = "pawanjangra1198@gmail.com", 
-           role = c("aut", "cre"),
+Title: Comprehensive India GST Data Repository (2017-2026)
+Version: 2.0.0
+Authors@R:
+    person("Pawan", "Kumar",
+           email = "pawan1198@example.com",
+           role  = c("aut", "cre"),
            comment = c(ORCID = "0000-0000-0000-0000"))
-Description: Provides tidy, analysis-ready datasets of India's Goods and 
-    Services Tax (GST) collections from July 2017 through early 2026, sourced 
-    from official Government of India Ministry of Finance data. Includes 
-    state-wise monthly domestic GST broken down by component (CGST, SGST, IGST, 
-    CESS) across all Indian states and Union Territories, as well as All-India 
-    summary aggregates. Helper functions support filtering, year-on-year growth 
-    analysis, and state/component summaries.
+Description: A comprehensive, analysis-ready repository of India's Goods and
+    Services Tax (GST) ecosystem covering July 2017 through early 2026. Provides
+    nine tidy datasets sourced from official Ministry of Finance and GST Council
+    releases: state-wise monthly tax collection (CGST/SGST/IGST/CESS), state-wise
+    refunds, GSTR-1 and GSTR-3B return filing compliance, e-Way Bill statistics,
+    IGST settlement to states, monthly gross-and-net collection comparisons,
+    state-wise taxpayer registration counts, and taxpayer constitution/gender
+    analysis. Helper functions support filtering, year-on-year growth, rankings,
+    compliance analysis, and e-Way Bill summaries.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Depends:
-    R (>= 4.2.0)
+    R (>= 4.1.0)
 Imports:
     data.table (>= 1.14.0),
     utils
 LazyData: true
+LazyDataCompression: bzip2
 Suggests:
     ggplot2,
     ggiraph,
+    scales,
     testthat (>= 3.0.0),
     knitr,
-    rmarkdown,
-    scales
+    rmarkdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 URL: https://github.com/pawan1198/gstIndia

@@ -1,4 +1,4 @@
-# gstIndia <img src="man/figures/logo.png" align="right" height="139" alt="" />
+# gstIndia <img src="man/figures/logo.png" align="right" height="139" alt=""/>
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/pawan1198/gstIndia/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/pawan1198/gstIndia/actions/workflows/R-CMD-check.yaml)
@@ -6,29 +6,40 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!-- badges: end -->
 
-**gstIndia** provides tidy, analysis-ready datasets of India's Goods and
-Services Tax (GST) collections from **July 2017 through early 2026**, sourced
-from the Ministry of Finance, Government of India. It includes:
-
-- **`gst_statewise`** — 4,000+ rows of monthly state/UT-level domestic GST
-  broken down by component (CGST, SGST, IGST, CESS) across 36 states and UTs.
-- **`gst_allindia`** — Monthly All-India aggregates (domestic, imports,
-  gross revenue, refunds, net revenue) from FY 2020-21 onward.
-- **Helper functions** for filtering, ranking, growth analysis, and component
-  mix computation.
+**gstIndia** is a comprehensive, analysis-ready repository of India's Goods and
+Services Tax (GST) ecosystem covering **July 2017 through early 2026**. Version
+2.0.0 ships **nine tidy datasets** and **17 helper functions** covering
+collection, refunds, return filing compliance, e-Way Bills, IGST settlement,
+and taxpayer registration.
 
 All monetary values are in **Rs. Crore** (1 Crore = 10 million INR).
+
+---
+
+## Datasets at a Glance
+
+| Dataset | Rows | Coverage | Description |
+|---|---|---|---|
+| `gst_statewise` | 4,306 | FY 2017-18 → 2025-26 | Monthly CGST/SGST/IGST/CESS by state/UT |
+| `gst_refunds` | 2,911 | FY 2020-21 → 2025-26 | Monthly refund disbursements by state |
+| `gstr1_filing` | 3,876 | FY 2017-18 → 2025-26 | GSTR-1 filing compliance by state/month |
+| `gstr3b_filing` | 3,914 | FY 2017-18 → 2025-26 | GSTR-3B filing compliance by state/month |
+| `ewb_data` | 3,474 | FY 2018-19 → 2025-26 | E-Way Bill stats (intrastate & interstate) |
+| `igst_settlement` | 3,914 | FY 2017-18 → 2025-26 | Monthly IGST settlement to states |
+| `gross_net_collection` | 23 | Apr 2024 → Feb 2026 | Gross vs net national GST with YoY |
+| `gst_registration` | 39 | Snapshot Mar 2025 | State-wise taxpayer registration by type |
+| `gst_taxpayer_profile` | 16 | Snapshot Mar 2025 | Taxpayer constitution & gender profile |
 
 ---
 
 ## Installation
 
 ```r
-# Install from GitHub (recommended)
+# From GitHub (recommended)
 # install.packages("remotes")
 remotes::install_github("pawan1198/gstIndia")
 
-# Or install from CRAN (once published)
+# From CRAN (once published)
 install.packages("gstIndia")
 ```
 
@@ -40,117 +51,123 @@ install.packages("gstIndia")
 library(gstIndia)
 library(data.table)
 
-# --- Explore the data -------------------------------------------------------
-gst_statewise          # 4,081 rows × 11 cols
-gst_allindia           # 142 rows × 9 cols
-gst_years()            # "2017-18" … "2025-26"
-gst_states()           # 36 states/UTs with codes and regions
+# ── What's available? ─────────────────────────────────────────────────────────
+gst_catalogue()
+gst_years()    # "2017-18" … "2025-26"
+gst_states()   # 36 states/UTs with codes and regions
 
-# --- Filter -----------------------------------------------------------------
-# Southern states, FY 2023-24, total only
+# ── Collection ────────────────────────────────────────────────────────────────
 gst_filter(region = "South", financial_year = "2023-24", component = "total")
-
-# --- Annual summary ---------------------------------------------------------
-gst_annual_summary(by = "state", financial_year = "2023-24")[order(-total)][1:5]
-#    financial_year         state region     cgst     sgst      igst      cess     total
-# 1:        2023-24   Maharashtra   West 47316.0 64178.8 137556.7 13148.5 262200.0
-# 2:        2023-24     Karnataka  South 28124.3 35476.5  66254.8  4628.9 134484.5
-# ...
-
-# --- Top states -------------------------------------------------------------
-gst_top_states(n = 5, financial_year = "2024-25")
-
-# --- Year-on-year growth ----------------------------------------------------
-gst_yoy(state = "Delhi")[order(-month_date)][1:6]
-
-# --- State share of national total ------------------------------------------
+gst_top_states(n = 5, financial_year = "2023-24")
+gst_annual_summary(by = "national")[, .(financial_year, total)]
 gst_state_share(financial_year = "2023-24")[1:5]
+gst_yoy(state = "Maharashtra")[order(-month_date)][1:6]
+gst_component_mix(state = "Gujarat", financial_year = "2023-24")
+
+# ── Refunds & net ─────────────────────────────────────────────────────────────
+gst_net_collection(financial_year = "2023-24", by = "state")[order(-net)][1:5]
+
+# ── Return filing compliance ──────────────────────────────────────────────────
+gst_compliance_trend("GSTR-3B", by = "region", financial_year = "2023-24")
+gst_low_compliance_states("GSTR-1", threshold = 0.90, financial_year = "2023-24")
+
+# ── E-Way Bills ───────────────────────────────────────────────────────────────
+ewb_top_states(n = 5, financial_year = "2023-24")
+ewb_summary(financial_year = "2023-24", direction = "intrastate")[1:5]
+
+# ── IGST settlement ───────────────────────────────────────────────────────────
+igst_settlement_summary(financial_year = "2023-24", by = "state")[order(-total)][1:5]
+
+# ── Registration ──────────────────────────────────────────────────────────────
+gst_registration_summary()[order(-normal)][1:5]
+gst_taxpayer_profile[order(-total_taxpayers)]
 ```
 
 ---
 
-## Datasets
+## Function Reference
 
-### `gst_statewise`
-
-| Column | Type | Description |
-|---|---|---|
-| `financial_year` | chr | e.g. `"2023-24"` |
-| `month` | chr | `"YYYY-MM"` |
-| `month_date` | Date | First day of month |
-| `state_code` | chr | 2-digit GST state code |
-| `state` | chr | Full state/UT name |
-| `region` | chr | North / South / East / West / Central / Northeast / Other |
-| `cgst` | dbl | Central GST (Rs. Crore) |
-| `sgst` | dbl | State GST (Rs. Crore) |
-| `igst` | dbl | Integrated GST (Rs. Crore) |
-| `cess` | dbl | Compensation Cess (Rs. Crore) |
-| `total` | dbl | CGST + SGST + IGST + CESS |
-
-### `gst_allindia`
-
-| Column | Type | Description |
-|---|---|---|
-| `financial_year` | chr | e.g. `"2023-24"` |
-| `month` | chr | `"YYYY-MM"` |
-| `month_date` | Date | First day of month |
-| `category` | chr | `domestic` / `igst_import` / `gross_revenue` / `refund` / `net_revenue` |
-| `cgst` | dbl | Rs. Crore |
-| `sgst` | dbl | Rs. Crore |
-| `igst` | dbl | Rs. Crore |
-| `cess` | dbl | Rs. Crore |
-| `total` | dbl | Rs. Crore |
-
----
-
-## Functions
+### Collection & Refunds
 
 | Function | Description |
 |---|---|
-| `gst_filter()` | Subset by year, state, region, component, or date range |
-| `gst_yoy()` | Month-over-same-month YoY growth rates |
+| `gst_filter()` | Subset statewise data by year/state/region/component/date |
+| `gst_yoy()` | Month-over-same-month year-on-year growth |
 | `gst_annual_summary()` | Annual totals by state, region, or national |
 | `gst_top_states()` | Top N states by collection |
 | `gst_state_share()` | Each state's % share of national total |
-| `gst_component_mix()` | Monthly CGST/SGST/IGST/CESS share breakdown |
-| `gst_states()` | Reference table of states, codes, regions |
-| `gst_years()` | All available financial years |
+| `gst_component_mix()` | CGST/SGST/IGST/Cess monthly share |
+| `gst_net_collection()` | Net collection after refunds |
+
+### Compliance
+
+| Function | Description |
+|---|---|
+| `gst_filing_compliance()` | Filter GSTR-1 or GSTR-3B data |
+| `gst_compliance_trend()` | Filing rate trend over time |
+| `gst_low_compliance_states()` | States below a filing threshold |
+
+### E-Way Bills
+
+| Function | Description |
+|---|---|
+| `ewb_summary()` | Filter EWB data by direction |
+| `ewb_top_states()` | Top states by EWB count or assessable value |
+
+### IGST Settlement
+
+| Function | Description |
+|---|---|
+| `igst_settlement_summary()` | Aggregate IGST settlement to states |
+
+### Registration
+
+| Function | Description |
+|---|---|
+| `gst_registration_summary()` | State-wise taxpayer registration |
+
+### Reference
+
+| Function | Description |
+|---|---|
+| `gst_states()` | State names, codes, regions |
+| `gst_years()` | Available financial years |
+| `gst_catalogue()` | All datasets with row counts and coverage |
 
 ---
 
-## Visualisation
+## Example Visualisation
 
 ```r
 library(ggplot2)
 
-# Monthly national gross revenue trend (FY 2020-21 onwards)
-data(gst_allindia)
+# GSTR-3B national compliance trend
+trend <- gst_compliance_trend("GSTR-3B", by = "national")
 
-ggplot(
-  gst_allindia[category == "gross_revenue"],
-  aes(month_date, total / 1e3)
-) +
-  geom_line(colour = "#1B6CA8", linewidth = 0.8) +
-  geom_smooth(method = "loess", se = FALSE, colour = "#E84545", linetype = "dashed") +
-  scale_y_continuous(labels = scales::comma_format(suffix = "K Cr")) +
-  labs(
-    title    = "India Monthly GST Gross Revenue",
-    subtitle = "FY 2020-21 to FY 2025-26  |  Rs. '000 Crore",
-    x = NULL, y = NULL,
-    caption  = "Source: Ministry of Finance, GoI"
-  ) +
+ggplot(trend, aes(month_date, avg_filing_pct * 100)) +
+  geom_line(colour = "#1B6CA8", linewidth = 0.9) +
+  geom_hline(yintercept = 90, linetype = "dashed", colour = "firebrick") +
+  scale_y_continuous(limits = c(0, 110), labels = scales::percent_format(scale = 1)) +
+  labs(title    = "National GSTR-3B Filing Compliance",
+       subtitle = "Dashed line = 90% threshold",
+       x = NULL, y = "Filing %",
+       caption  = "Source: Ministry of Finance, GoI") +
   theme_minimal(base_size = 13)
 ```
 
 ---
 
-## Data Source
+## Data Sources
 
-Ministry of Finance, Government of India — GST Revenue Collection Data.  
-<https://www.gst.gov.in>
+| Dataset | Source |
+|---|---|
+| Collection, Refunds, IGST Settlement | Ministry of Finance, GoI — <https://www.gst.gov.in> |
+| GSTR-1 / GSTR-3B Filing | Ministry of Finance, GoI — <https://www.gst.gov.in> |
+| E-Way Bills | National Informatics Centre — <https://ewaybillgst.gov.in> |
+| Registration & Taxpayer Profile | GST Council / GSTN — <https://www.gst.gov.in> |
 
-Data covers July 2017 (GST rollout) through February 2026.  
-FY 2025-26 figures are provisional.
+FY 2025-26 figures are provisional. GST was introduced on 1 July 2017, so
+FY 2017-18 contains only 9 months of data.
 
 ---
 
@@ -161,19 +178,12 @@ citation("gstIndia")
 ```
 
 ```
-Pawan (2025). gstIndia: India State-Wise Monthly GST Collection Data (2017-2026).
-R package version 0.1.0. https://github.com/pawan1198/gstIndia
+Kumar P (2025). gstIndia: Comprehensive India GST Data Repository (2017-2026).
+R package version 2.0.0. https://github.com/pawan1198/gstIndia
 ```
-
----
-
-## Contributing
-
-Bug reports and pull requests are welcome at
-<https://github.com/pawan1198/gstIndia/issues>.
 
 ---
 
 ## License
 
-MIT © Pawan
+MIT © Pawan Kumar
