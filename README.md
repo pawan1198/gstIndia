@@ -186,4 +186,4 @@ R package version 2.0.0. https://github.com/pawan1198/gstIndia
 
 ## License
 
-MIT © Pawan Kumar
+MIT © Pawan
