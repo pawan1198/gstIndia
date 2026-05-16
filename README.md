@@ -178,7 +178,7 @@ citation("gstIndia")
 ```
 
 ```
-Kumar P (2025). gstIndia: Comprehensive India GST Data Repository (2017-2026).
+Pawan (2025). gstIndia: Comprehensive India GST Data Repository (2017-2026).
 R package version 2.0.0. https://github.com/pawan1198/gstIndia
 ```
 
