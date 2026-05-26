@@ -4,7 +4,7 @@ Version: 2.1.0
 Authors@R:
     person("Pawan",
            email = "pawanjangra1198@gmail.com",
-           role  = c("Data Analyst", "Research Consultant"),
+           role  = c("aut", "cre"),
            comment = c(ORCID = "0000-0000-0000-0000"))
 Description: A comprehensive, analysis-ready repository of India's Goods and
     Services Tax (GST) ecosystem covering July 2017 through early 2026. Provides
