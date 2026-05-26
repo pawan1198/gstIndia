@@ -2,7 +2,7 @@ Package: gstIndia
 Title: Comprehensive India GST Data Repository (2017-2026)
 Version: 2.1.0
 Authors@R:
-    person("Pawan",
+    person("Pawan","Jangra",
            email = "pawanjangra1198@gmail.com",
            role  = c("aut", "cre"),
            comment = c(ORCID = "0000-0000-0000-0000"))
