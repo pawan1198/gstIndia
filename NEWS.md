@@ -5,6 +5,14 @@
 * Package completely rebuilt from the ground up. All v1.x function signatures
   are retained but several datasets are new — see **New datasets** below.
 
+## gstIndia 2.1.0
+
+# ### New functions
+* `gst_revenue_summary()` — national monthly revenue table (all 5 components) with optional YoY growth; wraps `gross_net_collection`.
+* `gst_returns_summary()` — merges `gstr1_filing` and `gstr3b_filing` into one data.table for side-by-side compliance comparison; supports state or national aggregation.
+* `ewb_trend()` — monthly e-way bill trend with MoM and YoY growth rates for both count and assessable value; filterable by direction and state.
+ 
+
 ## New datasets (v2.0.0)
 
 * `gst_refunds` — state-wise monthly GST refund disbursements (FY 2020-21 to 2025-26)

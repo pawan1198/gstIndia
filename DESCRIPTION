@@ -1,10 +1,10 @@
 Package: gstIndia
 Title: Comprehensive India GST Data Repository (2017-2026)
-Version: 2.0.0
+Version: 2.1.0
 Authors@R:
-    person("Pawan", "Kumar",
-           email = "pawan1198@example.com",
-           role  = c("aut", "cre"),
+    person("Pawan",
+           email = "pawanjangra1198@gmail.com",
+           role  = c("Data Analyst", "Research Consultant"),
            comment = c(ORCID = "0000-0000-0000-0000"))
 Description: A comprehensive, analysis-ready repository of India's Goods and
     Services Tax (GST) ecosystem covering July 2017 through early 2026. Provides
