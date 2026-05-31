@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">gstIndia</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0</span>
       </span>
     </div>
 
@@ -64,58 +64,8 @@
 <ul><li>Package completely rebuilt from the ground up. All v1.x function signatures are retained but several datasets are new — see <strong>New datasets</strong> below.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="new-datasets-v200-2-0-0">New datasets (v2.0.0)<a class="anchor" aria-label="anchor" href="#new-datasets-v200-2-0-0"></a></h3>
-<ul><li>
-<code>gst_refunds</code> — state-wise monthly GST refund disbursements (FY 2020-21 to 2025-26)</li>
-<li>
-<code>gstr1_filing</code> — GSTR-1 return filing compliance by state/month (FY 2017-18 to 2025-26)</li>
-<li>
-<code>gstr3b_filing</code> — GSTR-3B return filing compliance (FY 2017-18 to 2025-26)</li>
-<li>
-<code>ewb_data</code> — E-Way Bill statistics, intrastate &amp; interstate (FY 2018-19 to 2025-26)</li>
-<li>
-<code>igst_settlement</code> — monthly IGST settlement to states, regular + ad-hoc (FY 2017-18 to 2025-26)</li>
-<li>
-<code>gross_net_collection</code> — monthly gross/net national collection with YoY comparison (Apr 2024–Feb 2026)</li>
-<li>
-<code>gst_registration</code> — state-wise taxpayer registration by category (snapshot Mar 2025)</li>
-<li>
-<code>gst_taxpayer_profile</code> — taxpayer constitution and female representation (snapshot Mar 2025)</li>
-</ul></div>
-<div class="section level3">
-<h3 id="updated-datasets-2-0-0">Updated datasets<a class="anchor" aria-label="anchor" href="#updated-datasets-2-0-0"></a></h3>
-<ul><li>
-<code>gst_statewise</code> — extended through FY 2025-26; now includes <code>region</code> column.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="new-functions-v200-2-0-0">New functions (v2.0.0)<a class="anchor" aria-label="anchor" href="#new-functions-v200-2-0-0"></a></h3>
-<ul><li>
-<code><a href="../reference/gst_net_collection.html">gst_net_collection()</a></code> — net collection after subtracting refunds</li>
-<li>
-<code><a href="../reference/gst_filing_compliance.html">gst_filing_compliance()</a></code> — GSTR-1/3B compliance filter</li>
-<li>
-<code><a href="../reference/gst_compliance_trend.html">gst_compliance_trend()</a></code> — compliance trend over time by region/state</li>
-<li>
-<code><a href="../reference/gst_low_compliance_states.html">gst_low_compliance_states()</a></code> — identify below-threshold states</li>
-<li>
-<code><a href="../reference/ewb_summary.html">ewb_summary()</a></code> — e-Way Bill data filter by direction</li>
-<li>
-<code><a href="../reference/ewb_top_states.html">ewb_top_states()</a></code> — rank states by EWB volume or value</li>
-<li>
-<code><a href="../reference/igst_settlement_summary.html">igst_settlement_summary()</a></code> — IGST settlement aggregator</li>
-<li>
-<code><a href="../reference/gst_registration_summary.html">gst_registration_summary()</a></code> — taxpayer registration filter</li>
-<li>
-<code><a href="../reference/gst_catalogue.html">gst_catalogue()</a></code> — print all available datasets</li>
-</ul></div>
-<div class="section level3">
-<h3 id="improvements-2-0-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-2-0-0"></a></h3>
-<ul><li>All datasets now include a <code>region</code> column (North/South/East/West/Central/Northeast/Other).</li>
-<li>
-<code><a href="../reference/gst_filter.html">gst_filter()</a></code> is now backed by an internal <code>.get_ds()</code> helper that avoids global variable collisions (fixes subtle data.table NSE bug from v1.x).</li>
-<li>
-<code><a href="../reference/gst_component_mix.html">gst_component_mix()</a></code> rewritten to use internally-consistent denominators — percentages now sum to exactly 100 for every month.</li>
-</ul><hr></div>
+<h3 id="gstindia-2-0-0">gstIndia 2.1.0<a class="anchor" aria-label="anchor" href="#gstindia-2-0-0"></a></h3>
+</div>
 </div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.1.0" id="gstindia-010">gstIndia 0.1.0<a class="anchor" aria-label="anchor" href="#gstindia-010"></a></h2>
@@ -133,7 +83,7 @@
 
 
       <footer><div class="copyright">
-  <p></p><p>Developed by Pawan Kumar.</p>
+  <p></p><p>Developed by Pawan Jangra.</p>
 </div>
 
 <div class="pkgdown">

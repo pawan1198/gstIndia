@@ -10,6 +10,7 @@
 <url><loc>/reference/ewb_data.html</loc></url>
 <url><loc>/reference/ewb_summary.html</loc></url>
 <url><loc>/reference/ewb_top_states.html</loc></url>
+<url><loc>/reference/ewb_trend.html</loc></url>
 <url><loc>/reference/gross_net_collection.html</loc></url>
 <url><loc>/reference/gstIndia-package.html</loc></url>
 <url><loc>/reference/gst_annual_summary.html</loc></url>
@@ -23,6 +24,8 @@
 <url><loc>/reference/gst_refunds.html</loc></url>
 <url><loc>/reference/gst_registration.html</loc></url>
 <url><loc>/reference/gst_registration_summary.html</loc></url>
+<url><loc>/reference/gst_returns_summary.html</loc></url>
+<url><loc>/reference/gst_revenue_summary.html</loc></url>
 <url><loc>/reference/gst_state_share.html</loc></url>
 <url><loc>/reference/gst_states.html</loc></url>
 <url><loc>/reference/gst_statewise.html</loc></url>
